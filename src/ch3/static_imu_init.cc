@@ -15,6 +15,7 @@ bool StaticIMUInit::AddIMU(const IMU& imu) {
     }
 
     if (options_.use_speed_for_static_checking_ && !is_static_) {
+        // 所以加了轮式里程计的好处就是对静止状态的判断更加精准了
         LOG(WARNING) << "等待车辆静止";
         init_imu_deque_.clear();
         return false;

@@ -71,6 +71,7 @@ int main(int argc, char** argv) {
     io.SetIMUProcessFunc([&](const sad::IMU& imu) {
           /// IMU 处理函数
           if (!imu_init.InitSuccess()) {
+              // 这里进行了IMU的静止初始化
               imu_init.AddIMU(imu);
               return;
           }

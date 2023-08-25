@@ -36,11 +36,12 @@ class TxtIO {
     TxtIO(const std::string &file_path) : fin(file_path) {}
 
     /// 定义回调函数
-    /// TODO 回调函数
     using IMUProcessFuncType = std::function<void(const IMU &)>;
     using OdomProcessFuncType = std::function<void(const Odom &)>;
     using GNSSProcessFuncType = std::function<void(const GNSS &)>;
 
+    // 这里就相当于把回调函数作为参数传进去了
+    // 然后在外边调用的时候，其实又用到了lambda表达式
     TxtIO &SetIMUProcessFunc(IMUProcessFuncType imu_proc) {
         imu_proc_ = std::move(imu_proc);
         return *this;
