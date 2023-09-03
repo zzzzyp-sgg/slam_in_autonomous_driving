@@ -39,8 +39,9 @@ class EdgeInertial : public g2o::BaseMultiEdge<9, Vec9d> {
     bool write(std::ostream& os) const override { return false; }
 
     void computeError() override;
+#if (1)
     void linearizeOplus() override;
-
+#endif
     Eigen::Matrix<double, 24, 24> GetHessian() {
         linearizeOplus();
         Eigen::Matrix<double, 9, 24> J;

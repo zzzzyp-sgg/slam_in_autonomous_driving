@@ -84,17 +84,28 @@ void GinsPreInteg::AddGnss(const GNSS& gnss) {
 
     Optimize();
 
-    last_frame_ = this_frame_;
+    last_frame_ = this_frame_;        
+
     last_gnss_ = this_gnss_;
 }
 
 void GinsPreInteg::AddOdom(const sad::Odom& odom) {
     last_odom_ = odom;
     last_odom_set_ = true;
+    // 预积分
+    pre_integ_->Integrate(last_imu_, odom.timestamp_ - current_time_);
+    // 更新当前时间戳
+    current_time_ = odom.timestamp_; 
+
+    *this_frame_ = pre_integ_->Predict(*last_frame_, options_.gravity_);
+
+    // g2o优化
+    Optimize();
+    last_frame_ = this_frame_;  // 更新状态
 }
 
 void GinsPreInteg::Optimize() {
-    if (pre_integ_->dt_ < 1e-3) {
+    if (pre_integ_->dt_ < 1e-2) {
         // 未得到积分
         return;
     }

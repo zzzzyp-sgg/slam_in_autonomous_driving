@@ -42,6 +42,7 @@ class IMUPreintegration {
 
     /**
      * 从某个起始点开始预测积分之后的状态
+     * 相当于有i时刻的状态，去预测j时刻的状态
      * @param start 起始时时刻状态
      * @return  预测的状态
      */
@@ -62,6 +63,7 @@ class IMUPreintegration {
     Vec3d ba_ = Vec3d::Zero();
 
     // 预积分观测量
+    // 累积量，不含噪声的部分
     SO3 dR_;
     Vec3d dv_ = Vec3d::Zero();
     Vec3d dp_ = Vec3d::Zero();

@@ -22,9 +22,11 @@ void EdgeInertial::computeError() {
     auto* p2 = dynamic_cast<const VertexPose*>(_vertices[4]);
     auto* v2 = dynamic_cast<const VertexVelocity*>(_vertices[5]);
 
+    // 这里返回的是优化过的零篇值
     Vec3d bg = bg1->estimate();
     Vec3d ba = ba1->estimate();
 
+    // 用更新过的零偏重新计算R、v、p
     const SO3 dR = preint_->GetDeltaRotation(bg);
     const Vec3d dv = preint_->GetDeltaVelocity(bg, ba);
     const Vec3d dp = preint_->GetDeltaPosition(bg, ba);
@@ -39,6 +41,8 @@ void EdgeInertial::computeError() {
     _error << er, ev, ep;
 }
 
+// 验证雅可比的时候把这个关掉，不太优雅的写法，可以再加一个变量用来判断是否使用自动求导
+#if (1)
 void EdgeInertial::linearizeOplus() {
     auto* p1 = dynamic_cast<const VertexPose*>(_vertices[0]);
     auto* v1 = dynamic_cast<const VertexVelocity*>(_vertices[1]);
@@ -134,5 +138,7 @@ void EdgeInertial::linearizeOplus() {
     // dv/dv2, 4,46b
     _jacobianOplus[5].block<3, 3>(3, 0) = R1T.matrix();  // OK
 }
+#endif
+
 
 }  // namespace sad

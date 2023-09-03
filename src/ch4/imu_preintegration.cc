@@ -48,14 +48,16 @@ void IMUPreintegration::Integrate(const IMU &imu, double dt) {
 
     // 旋转部分
     Vec3d omega = gyr * dt;         // 转动量
+    // jr函数就是取出雅可比矩阵的
     Mat3d rightJ = SO3::jr(omega);  // 右雅可比
     SO3 deltaR = SO3::exp(omega);   // exp后
     dR_ = dR_ * deltaR;             // (4.9)
 
+    // 因为这两个部分的值要用到j-1时刻的旋转和雅可比，所以单独在后边定义了
     A.block<3, 3>(0, 0) = deltaR.matrix().transpose();
     B.block<3, 3>(0, 0) = rightJ * dt;
 
-    // 更新噪声项
+    // 更新噪声项 (4.30-4.31)
     cov_ = A * cov_ * A.transpose() + B * noise_gyro_acce_ * B.transpose();
 
     // 更新dR_dbg
@@ -65,6 +67,7 @@ void IMUPreintegration::Integrate(const IMU &imu, double dt) {
     dt_ += dt;
 }
 
+// 零偏的更新，对应公式(4.32)
 SO3 IMUPreintegration::GetDeltaRotation(const Vec3d &bg) { return dR_ * SO3::exp(dR_dbg_ * (bg - bg_)); }
 
 Vec3d IMUPreintegration::GetDeltaVelocity(const Vec3d &bg, const Vec3d &ba) {
