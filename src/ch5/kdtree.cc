@@ -41,7 +41,7 @@ void KdTree::Insert(const IndexVec &points, KdTreeNode *node) {
         return;
     }
 
-    if (points.size() == 1) {
+    if (points.size() == 1) {   // 这就是叶子节点吧
         size_++;
         node->point_idx_ = points[0];
         return;
@@ -180,6 +180,7 @@ bool KdTree::FindSplitAxisAndThresh(const IndexVec &point_idx, int &axis, float 
     Vec3f mean;
     math::ComputeMeanAndCovDiag(point_idx, mean, var, [this](int idx) { return cloud_[idx]; });
     int max_i, max_j;
+    // 一共三个方向，知道前两个之后就相当于都知道了
     var.maxCoeff(&max_i, &max_j);
     axis = max_i;
     th = mean[axis];

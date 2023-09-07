@@ -21,7 +21,7 @@ DEFINE_double(lidar_height, 1.128, "雷达安装高度");
 
 void GenerateRangeImage(PointCloudType::Ptr cloud) {
     int image_cols = int(360 / FLAGS_azimuth_resolution_deg);  // 水平为360度，按分辨率切分即可
-    int image_rows = FLAGS_elevation_rows;                     // 图像行数固定
+    int image_rows = FLAGS_elevation_rows;                     // 图像行数固定(这个是不一般和线数对应好一些)
     LOG(INFO) << "range image: " << image_rows << "x" << image_cols;
 
     // 我们生成一个HSV图像以更好地显示图像

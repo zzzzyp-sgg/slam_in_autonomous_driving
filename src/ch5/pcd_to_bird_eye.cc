@@ -52,7 +52,7 @@ void GenerateBEVImage(PointCloudType::Ptr cloud) {
             continue;
         }
 
-        image.at<cv::Vec3b>(y, x) = cv::Vec3b(227, 143, 79);
+        image.at<cv::Vec3b>(y, x) = cv::Vec3b(227, 143, 79);    // 赋色
     }
 
     cv::imwrite("./bev.png", image);

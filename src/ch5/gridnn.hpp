@@ -104,6 +104,7 @@ bool GridNN<dim>::SetPointCloud(CloudPtr cloud) {
     return true;
 }
 
+// 这里也用模板类，这样就可以适配二维和三维两种情况了
 template <int dim>
 Eigen::Matrix<int, dim, 1> GridNN<dim>::Pos2Grid(const Eigen::Matrix<float, dim, 1>& pt) {
     return (pt * inv_resolution_).template cast<int>();
@@ -137,12 +138,12 @@ template <int dim>
 bool GridNN<dim>::GetClosestPoint(const PointType& pt, PointType& closest_pt, size_t& idx) {
     // 在pt栅格周边寻找最近邻
     std::vector<size_t> idx_to_check;
-    auto key = Pos2Grid(ToEigen<float, dim>(pt));
+    auto key = Pos2Grid(ToEigen<float, dim>(pt));   // pt是要查找的点
 
     std::for_each(nearby_grids_.begin(), nearby_grids_.end(), [&key, &idx_to_check, this](const KeyType& delta) {
         auto dkey = key + delta;
         auto iter = grids_.find(dkey);
-        if (iter != grids_.end()) {
+        if (iter != grids_.end()) { // 这一步是得到了要查找的点的
             idx_to_check.insert(idx_to_check.end(), iter->second.begin(), iter->second.end());
         }
     });
@@ -155,6 +156,7 @@ bool GridNN<dim>::GetClosestPoint(const PointType& pt, PointType& closest_pt, si
     CloudPtr nearby_cloud(new PointCloudType);
     std::vector<size_t> nearby_idx;
     for (auto& idx : idx_to_check) {
+        // 这个template应该也是和维度对应的
         nearby_cloud->points.template emplace_back(cloud_->points[idx]);
         nearby_idx.emplace_back(idx);
     }
@@ -166,6 +168,7 @@ bool GridNN<dim>::GetClosestPoint(const PointType& pt, PointType& closest_pt, si
     return true;
 }
 
+// TODO 这里的ref在外部的调用中会被先设为cloud_，所以就是查找query相对ref的
 template <int dim>
 bool GridNN<dim>::GetClosestPointForCloud(CloudPtr ref, CloudPtr query,
                                           std::vector<std::pair<size_t, size_t>>& matches) {

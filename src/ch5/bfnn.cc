@@ -13,7 +13,7 @@ int bfnn_point(CloudPtr cloud, const Vec3f& point) {
                                 return (pt1.getVector3fMap() - point).squaredNorm() <
                                        (pt2.getVector3fMap() - point).squaredNorm();
                             }) -
-           cloud->points.begin();
+           cloud->points.begin();   // 得到的是索引
 }
 
 std::vector<int> bfnn_point_k(CloudPtr cloud, const Vec3f& point, int k) {
@@ -44,6 +44,7 @@ void bfnn_cloud_mt(CloudPtr cloud1, CloudPtr cloud2, std::vector<std::pair<size_
     // 并行化for_each
     matches.resize(index.size());
     std::for_each(std::execution::par_unseq, index.begin(), index.end(), [&](auto idx) {
+        // 这里是对cloud2里的每个点找cloud1里的最近邻
         matches[idx].second = idx;
         matches[idx].first = bfnn_point(cloud1, ToVec3f(cloud2->points[idx]));
     });
