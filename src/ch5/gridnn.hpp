@@ -169,6 +169,7 @@ bool GridNN<dim>::GetClosestPoint(const PointType& pt, PointType& closest_pt, si
 }
 
 // TODO 这里的ref在外部的调用中会被先设为cloud_，所以就是查找query相对ref的
+// 不过既然都已经设为成员变量了，这里还有必要作为参数输入么？
 template <int dim>
 bool GridNN<dim>::GetClosestPointForCloud(CloudPtr ref, CloudPtr query,
                                           std::vector<std::pair<size_t, size_t>>& matches) {

@@ -57,7 +57,7 @@ struct OctoTreeNode {
 
     bool IsLeaf() const {
         for (const OctoTreeNode* n : children) {
-            if (n != nullptr) {
+            if (n != nullptr) { // 没有再下一级的节点了就是叶子节点了
                 return false;
             }
         }

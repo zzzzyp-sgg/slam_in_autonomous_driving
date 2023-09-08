@@ -33,6 +33,7 @@ struct NodeAndDistance {
     KdTreeNode* node_ = nullptr;
     float distance2_ = 0;  // 平方距离，用于比较
 
+    // 这里应该是节点距离查询点的距离
     bool operator<(const NodeAndDistance& other) const { return distance2_ < other.distance2_; }
 };
 

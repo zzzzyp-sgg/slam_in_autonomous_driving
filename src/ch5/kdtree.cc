@@ -16,6 +16,7 @@ bool KdTree::BuildTree(const CloudPtr &cloud) {
         return false;
     }
 
+    // 相当于这里为cloud_赋值
     cloud_.clear();
     cloud_.resize(cloud->size());
     for (size_t i = 0; i < cloud->points.size(); ++i) {
@@ -48,6 +49,7 @@ void KdTree::Insert(const IndexVec &points, KdTreeNode *node) {
     }
 
     IndexVec left, right;
+    // 点，轴，阈值，左右节点指针
     if (!FindSplitAxisAndThresh(points, node->axis_index_, node->split_thresh_, left, right)) {
         size_++;
         node->point_idx_ = points[0];
