@@ -33,6 +33,7 @@ class GridNN {
 
         // for 3D
         NEARBY6,  // 上下左右前后
+        NEARBY14, // 角块也加进去
     };
 
     /**
@@ -48,8 +49,8 @@ class GridNN {
         if (dim == 2 && nearby_type_ == NearbyType::NEARBY6) {
             LOG(INFO) << "2D grid does not support nearby6, using nearby4 instead.";
             nearby_type_ = NearbyType::NEARBY4;
-        } else if (dim == 3 && (nearby_type_ != NearbyType::NEARBY6 && nearby_type_ != NearbyType::CENTER)) {
-            LOG(INFO) << "3D grid does not support nearby4/8, using nearby6 instead.";
+        } else if (dim == 3 && (nearby_type_ != NearbyType::NEARBY6 && nearby_type_ != NearbyType::CENTER && nearby_type_ != NearbyType::NEARBY14)) {
+            LOG(INFO) << "3D grid does not support nearby4/8, using nearby6 or nearby14 instead.";
             nearby_type_ = NearbyType::NEARBY6;
         }
 
@@ -131,6 +132,13 @@ void GridNN<3>::GenerateNearbyGrids() {
     } else if (nearby_type_ == NearbyType::NEARBY6) {
         nearby_grids_ = {KeyType(0, 0, 0),  KeyType(-1, 0, 0), KeyType(1, 0, 0), KeyType(0, 1, 0),
                          KeyType(0, -1, 0), KeyType(0, 0, -1), KeyType(0, 0, 1)};
+    } else if (nearby_type_ == NearbyType::NEARBY14) {
+        nearby_grids_ = {KeyType(0, 0, 0),  KeyType(-1, 0, 0), KeyType(1, 0, 0), KeyType(0, 1, 0),
+                         KeyType(0, -1, 0), KeyType(0, 0, -1), KeyType(0, 0, 1),
+                         KeyType(-1, -1, -1),   KeyType(-1,  1, -1),   // 在NaerBy6的基础上加上八个角块
+                         KeyType(-1, -1,  1),   KeyType(-1,  1,  1), 
+                         KeyType( 1, -1, -1),   KeyType( 1,  1, -1), 
+                         KeyType( 1, -1,  1),   KeyType( 1,  1,  1)};
     }
 }
 
