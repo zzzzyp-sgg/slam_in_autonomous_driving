@@ -21,12 +21,13 @@ int main(int argc, char** argv) {
     google::ParseCommandLineFlags(&argc, &argv, true);
 
     sad::RosbagIO rosbag_io(fLS::FLAGS_bag_path);
-    Scan2d::Ptr last_scan = nullptr, current_scan = nullptr;
+    Scan2d::Ptr last_scan = nullptr, current_scan = nullptr;    // ROS中的雷达类型
 
     /// 我们将上一个scan与当前scan进行配准
     rosbag_io
         .AddScan2DHandle("/pavo_scan_bottom",
                          [&](Scan2d::Ptr scan) {
+                            // TODO 对应到ROS话题指针？所以相当于就是对应到数据了
                              current_scan = scan;
 
                              if (last_scan == nullptr) {
@@ -39,10 +40,15 @@ int main(int argc, char** argv) {
                              icp.SetSource(current_scan);
 
                              SE2 pose;
+                             // icp.DegradationDetection(pose);
                              if (fLS::FLAGS_method == "point2point") {
                                  icp.AlignGaussNewton(pose);
                              } else if (fLS::FLAGS_method == "point2plane") {
                                  icp.AlignGaussNewtonPoint2Plane(pose);
+                             } else if (fLS::FLAGS_method == "point2pointG2O") {
+                                 icp.AlignG2O(pose);
+                             } else if (fLS::FLAGS_method == "point2planeG2O") {
+                                 icp.AlignG2oPoint2Plane(pose);
                              }
 
                              cv::Mat image;

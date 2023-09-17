@@ -34,8 +34,17 @@ class Icp2d {
     /// 使用高斯牛顿法进行配准
     bool AlignGaussNewton(SE2& init_pose);
 
+    /// 使用G2O来实现点到点的ICP
+    bool AlignG2O(SE2& init_pose);
+
     /// 使用高斯牛顿法进行配准, Point-to-Plane
     bool AlignGaussNewtonPoint2Plane(SE2& init_pose);
+
+    /// 使用G2O来实现点到线的ICP
+    bool AlignG2oPoint2Plane(SE2& init_pose);
+
+    /// 利用直线拟合判断是否退化
+    bool DegradationDetection(SE2& init_pose);
 
    private:
     // 建立目标点云的Kdtree
@@ -44,8 +53,11 @@ class Icp2d {
     pcl::search::KdTree<Point2d> kdtree_;
     Cloud2d::Ptr target_cloud_;  // PCL 形式的target cloud
 
+    pcl::search::KdTree<Point2d>::Ptr kdtree_g2o_;
+
     Scan2d::Ptr target_scan_ = nullptr;
     Scan2d::Ptr source_scan_ = nullptr;
+    
 };
 
 }  // namespace sad

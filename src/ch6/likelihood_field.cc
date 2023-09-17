@@ -5,6 +5,8 @@
 #include "ch6/g2o_types.h"
 #include "ch6/likelihood_filed.h"
 
+#include "common/math_utils.h"
+
 #include <glog/logging.h>
 
 #include <g2o/core/base_unary_edge.h>
@@ -29,6 +31,7 @@ void LikelihoodField::SetTargetScan(Scan2d::Ptr scan) {
             continue;
         }
 
+        // 这段计算的是图像坐标
         double real_angle = scan->angle_min + i * scan->angle_increment;
         double x = scan->ranges[i] * std::cos(real_angle) * resolution_ + 500;
         double y = scan->ranges[i] * std::sin(real_angle) * resolution_ + 500;
@@ -37,6 +40,7 @@ void LikelihoodField::SetTargetScan(Scan2d::Ptr scan) {
         for (auto& model_pt : model_) {
             int xx = int(x + model_pt.dx_);
             int yy = int(y + model_pt.dy_);
+            /// 这里我的理解为，在似然场里的就根据下边的BuildModel函数得到的似然场值填进去
             if (xx >= 0 && xx < field_.cols && yy >= 0 && yy < field_.rows &&
                 field_.at<float>(yy, xx) > model_pt.residual_) {
                 field_.at<float>(yy, xx) = model_pt.residual_;
@@ -79,6 +83,7 @@ bool LikelihoodField::AlignGaussNewton(SE2& init_pose) {
             }
 
             float angle = source_->angle_min + i * source_->angle_increment;
+            // TODO 激光扫描可能会打到机器人身上以及只有270度
             if (angle < source_->angle_min + 30 * M_PI / 180.0 || angle > source_->angle_max - 30 * M_PI / 180.0) {
                 continue;
             }
@@ -94,8 +99,14 @@ bool LikelihoodField::AlignGaussNewton(SE2& init_pose) {
                 effective_num++;
 
                 // 图像梯度
-                float dx = 0.5 * (field_.at<float>(pf[1], pf[0] + 1) - field_.at<float>(pf[1], pf[0] - 1));
-                float dy = 0.5 * (field_.at<float>(pf[1] + 1, pf[0]) - field_.at<float>(pf[1] - 1, pf[0]));
+                // float dx = 0.5 * (field_.at<float>(pf[1], pf[0] + 1) - field_.at<float>(pf[1], pf[0] - 1));
+                // float dy = 0.5 * (field_.at<float>(pf[1] + 1, pf[0]) - field_.at<float>(pf[1] - 1, pf[0]));
+
+                // 插值实现
+                float dx = 0.5 * (sad::math::GetPixelValue<float>(field_, pf[0] + 1, pf[1]) 
+                    - sad::math::GetPixelValue<float>(field_, pf[0] - 1, pf[1]));
+                float dy = 0.5 * (sad::math::GetPixelValue<float>(field_, pf[0], pf[1] + 1) 
+                    - sad::math::GetPixelValue<float>(field_, pf[0], pf[1] - 1));
 
                 Vec3d J;
                 J << resolution_ * dx, resolution_ * dy,

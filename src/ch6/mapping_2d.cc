@@ -26,6 +26,7 @@ bool Mapping2D::Init(bool with_loop_closing) {
     return true;
 }
 
+/// 多维的就先转成2D
 bool Mapping2D::ProcessScan(MultiScan2d::Ptr scan) { return ProcessScan(MultiToScan2d(scan)); }
 
 bool Mapping2D::ProcessScan(Scan2d::Ptr scan) {
@@ -47,6 +48,7 @@ bool Mapping2D::ProcessScan(Scan2d::Ptr scan) {
 
     // current_submap_->AddScanInOccupancyMap(current_frame_);
     first_scan_ = false;
+    // 设为关键帧的条件：运动了一定角度或距离
     bool is_kf = IsKeyFrame();
 
     if (is_kf) {

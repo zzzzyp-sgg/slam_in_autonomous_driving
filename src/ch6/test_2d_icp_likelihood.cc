@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
             "/pavo_scan_bottom",
             [&](Scan2d::Ptr scan) {
                 sad::LikelihoodField lf;
-                current_scan = scan;
+                current_scan = scan;    // 也是通过回调函数，把ROS消息和数据绑定在了一起
                 SE2 pose;
 
                 if (last_scan == nullptr) {
@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
                     return true;
                 }
 
-                lf.SetTargetScan(last_scan);
+                lf.SetTargetScan(last_scan);    // 这里还设置了似然场的函数
                 lf.SetSourceScan(current_scan);
 
                 if (FLAGS_method == "gauss-newton") {

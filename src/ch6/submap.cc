@@ -15,6 +15,7 @@ void Submap::SetOccuFromOtherSubmap(std::shared_ptr<Submap> other) {
             occu_map_.AddLidarFrame(frames_in_other[i]);
         }
     }
+    // 根据栅格地图来生成似然场
     field_.SetFieldImageFromOccuMap(occu_map_.GetOccupancyGrid());
 }
 
