@@ -32,6 +32,7 @@ class FeatureExtraction {
      * @param pc_out_surf   输出平面的点云
      */
     void Extract(FullCloudPtr pc_in, CloudPtr pc_out_edge, CloudPtr pc_out_surf);
+    void Extract(FullCloudPtr pc_in, CloudPtr pc_out_edge, CloudPtr pc_out_surf, CloudPtr pc_out_ground);
 
     /**
      * 对单独一段区域提取角点和面点

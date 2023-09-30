@@ -77,6 +77,7 @@ SE3 DirectNDTLO::AlignWithLocalMap(CloudPtr scan) {
 
     SE3 guess;
     bool align_success = true;
+    // 最开始没有初始位姿
     if (estimated_poses_.size() < 2) {
         if (options_.use_pcl_ndt_) {
             ndt_pcl_.align(*output, guess.matrix().cast<float>());

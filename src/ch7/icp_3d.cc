@@ -32,6 +32,13 @@ bool Icp3d::AlignP2P(SE3& init_pose) {
     for (int iter = 0; iter < options_.max_iteration_; ++iter) {
         // gauss-newton 迭代
         // 最近邻，可以并发
+        /**
+         * std::exeuction            ---- 执行策略允许您指定您的意图，让标准库根据这些策略来执行操作。
+         * std::execution::seq       ---- 这是顺序执行策略，表示操作应按照它们在代码中的顺序执行。这是默认的执行策略。
+         * std::execution::par       ---- 这是并行执行策略，表示操作可以并行执行，但不保证顺序。
+         * std::execution::par_unseq ---- 这是并行执行策略，表示操作可以并行执行，而且没有明显的顺序要求。
+         *                                这允许编译器和标准库更自由地执行操作以提高性能。
+        */
         std::for_each(std::execution::par_unseq, index.begin(), index.end(), [&](int idx) {
             auto q = ToVec3d(source_->points[idx]);
             Vec3d qs = pose * q;  // 转换之后的q
@@ -73,10 +80,29 @@ bool Icp3d::AlignP2P(SE3& init_pose) {
                 if (!effect_pts[idx]) {
                     return pre;
                 } else {
-                    total_res += errors[idx].dot(errors[idx]);
+                    double e2 = errors[idx].dot(errors[idx]);
+                    // total_res += errors[idx].dot(errors[idx]);
+                    total_res += e2;
                     effective_num++;
-                    return std::pair<Mat6d, Vec6d>(pre.first + jacobians[idx].transpose() * jacobians[idx],
-                                                   pre.second - jacobians[idx].transpose() * errors[idx]);
+
+                    // TODO 这里来添加鲁棒核函数
+                    double delta = 1.0;
+
+                    double delta2 = delta * delta;
+                    double delta2_inv = 1.0 / delta2;
+                    double aux = delta2_inv * e2 + 1.0;
+
+                    Vec3d rho;
+                    rho[0] = delta2  * log(aux);            // Cauchy核函数
+                    rho[1] = 1.0 / aux;                     // Cauchy核函数的一阶导数
+                    rho[2] = -delta2_inv * pow(rho[1],2);   // Cauchy核函数的二阶导数
+
+                    // Mat3d weighted_infos = rho[1] * Mat3d::Identity() + 2 * rho[2] * errors[idx] * errors[idx].transpose();
+                    Mat3d weighted_infos = rho[1] * Mat3d::Identity();
+                    // return std::pair<Mat6d, Vec6d>(pre.first + jacobians[idx].transpose() * jacobians[idx],
+                    //                                pre.second - jacobians[idx].transpose() * errors[idx]);
+                    return std::pair<Mat6d, Vec6d>(pre.first + jacobians[idx].transpose() * weighted_infos * jacobians[idx],
+                                                   pre.second - rho[1] * jacobians[idx].transpose() * errors[idx]);
                 }
             });
 
@@ -175,6 +201,11 @@ bool Icp3d::AlignP2Plane(SE3& init_pose) {
 
         // 累加Hessian和error,计算dx
         // 原则上可以用reduce并发，写起来比较麻烦，这里写成accumulate
+        /**
+         * std::reduce 会从范围的开头到结尾依次应用二元操作 op，
+         * 将元素逐个组合起来，最终返回累积的结果。
+         * 这个函数允许您通过执行策略来指导操作的执行，以提高性能。
+        */
         double total_res = 0;
         int effective_num = 0;
         auto H_and_err = std::accumulate(
@@ -184,10 +215,29 @@ bool Icp3d::AlignP2Plane(SE3& init_pose) {
                 if (!effect_pts[idx]) {
                     return pre;
                 } else {
-                    total_res += errors[idx] * errors[idx];
+                    double e2 = errors[idx] * errors[idx];
+                    // total_res += errors[idx].dot(errors[idx]);
+                    total_res += e2;
                     effective_num++;
-                    return std::pair<Mat6d, Vec6d>(pre.first + jacobians[idx].transpose() * jacobians[idx],
-                                                   pre.second - jacobians[idx].transpose() * errors[idx]);
+
+                    // TODO 这里来添加鲁棒核函数
+                    double delta = 1.0;
+
+                    double delta2 = delta * delta;
+                    double delta2_inv = 1.0 / delta2;
+                    double aux = delta2_inv * e2 + 1.0;
+
+                    Vec3d rho;
+                    rho[0] = delta2  * log(aux);            // Cauchy核函数
+                    rho[1] = 1.0 / aux;                     // Cauchy核函数的一阶导数
+                    rho[2] = -delta2_inv * pow(rho[1],2);   // Cauchy核函数的二阶导数
+
+                    // Mat3d weighted_infos = rho[1] * Mat3d::Identity() + 2 * rho[2] * errors[idx] * errors[idx].transpose();
+                    double weighted_infos = rho[1];
+                    // return std::pair<Mat6d, Vec6d>(pre.first + jacobians[idx].transpose() * jacobians[idx],
+                    //                                pre.second - jacobians[idx].transpose() * errors[idx]);
+                    return std::pair<Mat6d, Vec6d>(pre.first + jacobians[idx].transpose() * weighted_infos * jacobians[idx],
+                                                   pre.second - rho[1] * jacobians[idx].transpose() * errors[idx]);
                 }
             });
 
@@ -303,10 +353,29 @@ bool Icp3d::AlignP2Line(SE3& init_pose) {
                 if (!effect_pts[idx]) {
                     return pre;
                 } else {
-                    total_res += errors[idx].dot(errors[idx]);
+                    double e2 = errors[idx].dot(errors[idx]);
+                    // total_res += errors[idx].dot(errors[idx]);
+                    total_res += e2;
                     effective_num++;
-                    return std::pair<Mat6d, Vec6d>(pre.first + jacobians[idx].transpose() * jacobians[idx],
-                                                   pre.second - jacobians[idx].transpose() * errors[idx]);
+
+                    // TODO 这里来添加鲁棒核函数
+                    double delta = 1.0;
+
+                    double delta2 = delta * delta;
+                    double delta2_inv = 1.0 / delta2;
+                    double aux = delta2_inv * e2 + 1.0;
+
+                    Vec3d rho;
+                    rho[0] = delta2  * log(aux);            // Cauchy核函数
+                    rho[1] = 1.0 / aux;                     // Cauchy核函数的一阶导数
+                    rho[2] = -delta2_inv * pow(rho[1],2);   // Cauchy核函数的二阶导数
+
+                    // Mat3d weighted_infos = rho[1] * Mat3d::Identity() + 2 * rho[2] * errors[idx] * errors[idx].transpose();
+                    Mat3d weighted_infos = rho[1] * Mat3d::Identity();
+                    // return std::pair<Mat6d, Vec6d>(pre.first + jacobians[idx].transpose() * jacobians[idx],
+                    //                                pre.second - jacobians[idx].transpose() * errors[idx]);
+                    return std::pair<Mat6d, Vec6d>(pre.first + jacobians[idx].transpose() * weighted_infos * jacobians[idx],
+                                                   pre.second - rho[1] * jacobians[idx].transpose() * errors[idx]);
                 }
             });
 

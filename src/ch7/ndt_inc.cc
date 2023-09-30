@@ -172,7 +172,6 @@ bool IncNdt3d::AlignNdt(SE3& init_pose) {
             }
         });
 
-        // 累加Hessian和error,计算dx
         double total_res = 0;
 
         int effective_num = 0;
@@ -185,11 +184,37 @@ bool IncNdt3d::AlignNdt(SE3& init_pose) {
                 continue;
             }
 
-            total_res += errors[idx].transpose() * infos[idx] * errors[idx];
-            effective_num++;
+        // total_res += errors[idx].transpose() * infos[idx] * errors[idx];
+        double e2 = errors[idx].transpose() * infos[idx] * errors[idx];
+        total_res += e2;
 
-            H += jacobians[idx].transpose() * infos[idx] * jacobians[idx];
-            err += -jacobians[idx].transpose() * infos[idx] * errors[idx];
+        effective_num++;
+
+        // TODO 添加Cauchy鲁棒核函数
+
+        // 根据Huber定义的95 efficiency rule，由于NDT的残差是高斯分布，所以Cauchy核的控制参数delta取2.3849
+        double delta = 2.3849; 
+
+        double delta2 = delta * delta;
+        double delta2_inv = 1.0 / delta2;
+        double aux = delta2_inv * e2 + 1.0;
+
+        Vec3d rho;
+        rho[0] = delta2  * log(aux);            // Cauchy核函数
+        rho[1] = 1.0 / aux;                     // Cauchy核函数的一阶导数
+        rho[2] = -delta2_inv * pow(rho[1],2);   // Cauchy核函数的二阶导数
+
+        // 加权信息矩阵，
+        Mat3d weighted_infos = rho[1] * infos[idx];
+
+        
+        // 累加Hessian和error,计算dx
+        H += jacobians[idx].transpose() * weighted_infos * jacobians[idx];      // 修改为加权信息矩阵
+        err += -rho[1] * jacobians[idx].transpose() * infos[idx] * errors[idx]; // 乘以Cauchy核函数的一阶导
+
+        // // 加权最小二乘的高斯牛顿解法，累加海森矩阵和残差，对应公式（7.15）
+        // H += jacobians[idx].transpose() * infos[idx] * jacobians[idx];
+        // err += -jacobians[idx].transpose() * infos[idx] * errors[idx];
         }
 
         if (effective_num < options_.min_effective_pts_) {

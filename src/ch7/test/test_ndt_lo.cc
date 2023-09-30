@@ -40,6 +40,7 @@ int main(int argc, char** argv) {
             sad::common::Timer::Evaluate(
                 [&]() {
                     SE3 pose;
+                    // 匹配的步骤也在addcloud中
                     ndt_lo.AddCloud(sad::VoxelCloud(sad::PointCloud2ToCloudPtr(msg)), pose);
                 },
                 "NDT registration");
