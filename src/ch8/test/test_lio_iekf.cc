@@ -26,6 +26,7 @@ int main(int argc, char** argv) {
     sad::LioIEKF lio;
     lio.Init(FLAGS_config);
 
+    // TODO 链式调用，关键在于每个函数返回对象都是*this
     rosbag_io
         .AddAutoPointCloudHandle([&](sensor_msgs::PointCloud2::Ptr cloud) -> bool {
             sad::common::Timer::Evaluate([&]() { lio.PCLCallBack(cloud); }, "IEKF lio");

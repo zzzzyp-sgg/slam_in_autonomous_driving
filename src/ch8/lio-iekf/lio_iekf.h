@@ -14,6 +14,9 @@
 
 #include "tools/ui/pangolin_window.h"
 
+#include "ch8/ikd-Tree/icp_inc.h"                             // 用于点面ICP
+#include "ch8/ikd-Tree/ikd_Tree.h"                    // 用于构建增量式kd-tree
+
 namespace sad {
 
 class LioIEKF {
@@ -24,6 +27,7 @@ class LioIEKF {
         Options() {}
         bool save_motion_undistortion_pcd_ = false;  // 是否保存去畸变前后的点云
         bool with_ui_ = true;                        // 是否带着UI
+        int NUM_MATCH_POINTS = 5;                       // 最近邻点数，默认5个
     };
 
     LioIEKF(Options options = Options());
@@ -67,12 +71,25 @@ class LioIEKF {
     /// 执行一次配准和观测
     void Align();
 
+    /// ICP配准
+    void AlignICP_ikdtree();
+
+    /// 局部地图处理和增加
+    void MapIncremental();
+
+    /// 类型转换
+    CloudPtr PointVecToCloudPtr(const PointVec& pointVec);
+
     /// modules
     std::shared_ptr<MessageSync> sync_ = nullptr;
     StaticIMUInit imu_init_;
 
     /// point clouds data
-    FullCloudPtr scan_undistort_{new FullPointCloudType()};  // scan after undistortion
+    FullCloudPtr scan_undistort_fullcloud_{new FullPointCloudType()};  // scan after undistortion
+    CloudPtr scan_undistort_{new PointCloudType()};
+    CloudPtr scan_down_body_{new PointCloudType()};     // 【新增】 雷达系下降采样后的点云
+    CloudPtr scan_down_world_{new PointCloudType()};    // 【新增】 世界系下降采样后的点云
+    std::vector<PointVec> nearest_points_;              // 【新增】 近邻点
     CloudPtr current_scan_ = nullptr;
 
     /// NDT数据
@@ -82,7 +99,14 @@ class LioIEKF {
     // flags
     bool imu_need_init_ = true;
     bool flg_first_scan_ = true;
+    double filter_size_map_min_ = 0.5; // 【新增】高博 yaml中的参数为0.5，默认为0
+    bool flg_ESKF_inited_ = false;
     int frame_num_ = 0;
+
+    double first_lidar_time_ = 0.0; // 【新增】
+
+    // 【新增】ICP数据
+    IncIcp3d icp_;
 
     ///////////////////////// EKF inputs and output ///////////////////////////////////////////////////////
     MeasureGroup measures_;  // sync IMU and lidar scan

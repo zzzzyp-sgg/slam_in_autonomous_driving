@@ -24,6 +24,7 @@ LioPreinteg::LioPreinteg(Options options) : options_(options), preinteg_(new IMU
     imu_init_options.use_speed_for_static_checking_ = false;  // 本节数据不需要轮速计
     imu_init_ = StaticIMUInit(imu_init_options);
 
+    // 零偏的随机游走
     double bg_rw2 = 1.0 / (options_.bias_gyro_var_ * options_.bias_gyro_var_);
     options_.bg_rw_info_.diagonal() << bg_rw2, bg_rw2, bg_rw2;
     double ba_rw2 = 1.0 / (options_.bias_acce_var_ * options_.bias_acce_var_);

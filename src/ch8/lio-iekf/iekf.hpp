@@ -219,8 +219,8 @@ bool IESKF<S>::UpdateUsingCustomObserve(IESKF::CustomObsFunc obs) {
     // H阵由用户给定
 
     SO3 start_R = R_;
-    Eigen::Matrix<S, 18, 1> HTVr;
-    Eigen::Matrix<S, 18, 18> HTVH;
+    Eigen::Matrix<S, 18, 1> HTVr;           // 式(8.22)
+    Eigen::Matrix<S, 18, 18> HTVH;          // 式(8.23)
     Eigen::Matrix<S, 18, Eigen::Dynamic> K;
     Mat18T Pk, Qk;
 
